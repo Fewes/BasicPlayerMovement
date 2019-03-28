@@ -37,6 +37,8 @@ public class PhysicsPlayer : MonoBehaviour
 	float		m_CameraYaw;
 	// The current number of collisions with other objects. Used to determine if the player object is grounded or not.
 	int			m_CollisionCounter;
+	// Track if the player should jump next FixedUpdate
+	bool		m_ShouldJump;
 
     // Start is called before the first frame update
     void Start ()
@@ -49,8 +51,17 @@ public class PhysicsPlayer : MonoBehaviour
 		Cursor.visible = false;
     }
 
-    // Update is called once per frame
-    void Update ()
+	// Update is called once per frame
+	void Update ()
+	{
+		// We need to check and store this here, as the FixedUpdate might "miss" some inputs otherwise,
+		// since Update runs more often.
+		if (Input.GetKey(KeyCode.Space))
+			m_ShouldJump = true;
+	}
+
+	// FixedUpdate is called once per phsyics frame
+	void FixedUpdate ()
     {
         UpdateMovement();
     }
@@ -119,8 +130,11 @@ public class PhysicsPlayer : MonoBehaviour
 		velocity.y = m_Rigidbody.velocity.y;
 
 		// If we are grounded and spacebar is pressed, override the vertical velocity with the jump velocity
-		if (isGrounded && Input.GetKey(KeyCode.Space))
+		if (isGrounded && m_ShouldJump)
 			velocity.y = m_JumpVelocity;
+
+		// Regardless if we jumped or not, we reset this bool since a FixedUpdate now has passed.
+		m_ShouldJump = false;
 
 		// Apply our changes to the rigidbody velocity by setting the value to our new vector.
 		m_Rigidbody.velocity = velocity;
